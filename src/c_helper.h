@@ -53,7 +53,10 @@ static void bridgeCallback(callback cb, void *data, int len, void *context)
 typedef void (*asyncCallback)(DBuffer, DBuffer);
 static void bridgeCallbackAsync(asyncCallback cb, DBuffer data, DBuffer tid)
 {
+	printf("start");
 	cb(data, tid);
+	printf("end");
+	return;
 }
 
 static void myprint(char *s)

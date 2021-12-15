@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"p2p/helper"
 	"runtime"
-	"time"
+	// "time"
 	"unsafe"
 
 	"github.com/libp2p/go-libp2p"
@@ -18,12 +18,12 @@ import (
 	libp2phost "github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
-	host "github.com/libp2p/go-libp2p-host"
+	host "github.com/libp2p/go-libp2p-core/host"
 	peerstore "github.com/libp2p/go-libp2p-peerstore"
-	"github.com/libp2p/go-libp2p/p2p/discovery"
+	discovery "github.com/libp2p/go-libp2p/p2p/discovery/mdns"
 
 	multiaddr "github.com/multiformats/go-multiaddr"
-	manet "github.com/multiformats/go-multiaddr-net"
+	manet "github.com/multiformats/go-multiaddr/net"
 )
 
 func CreateBackgroundContext() context.Context {
@@ -31,10 +31,10 @@ func CreateBackgroundContext() context.Context {
 }
 
 func CreateMdnsService(ctx context.Context, node host.Host, t int32, rendezvous string) discovery.Service {
-	ser, err := discovery.NewMdnsService(ctx, node, time.Millisecond*time.Duration(t), rendezvous)
-	if err != nil {
-		panic(err)
-	}
+	ser := discovery.NewMdnsService(node, rendezvous)
+	// if err != nil {
+	// 	panic(err)
+	// }
 	return ser
 }
 
@@ -295,9 +295,18 @@ func subshandler(sub event.Subscription, handlerFunc unsafe.Pointer, tid string,
 	tidPtr := make([]byte, len(tid))
 	copy(tidPtr, tid)
 	tidBuffer := C.getDBuffer(unsafe.Pointer(&(tidPtr[0])), C.int(len(tid)))
+
+	fmt.Println("one")
+	C.bridgeCallbackAsync(C.asyncCallback(handlerFunc), C.emptyDBuffer(), tidBuffer)
+	fmt.Println("two")
+	C.bridgeCallbackAsync(C.asyncCallback(handlerFunc), C.emptyDBuffer(), tidBuffer)
+	fmt.Println("three")
+	C.bridgeCallbackAsync(C.asyncCallback(handlerFunc), C.emptyDBuffer(), tidBuffer)
+	
 	defer sub.Close()
 	for e := range sub.Out() {
 		fmt.Println("%s", e)
+
 		switch e := e.(type) {
 		case event.EvtLocalReachabilityChanged:
 			{
@@ -315,6 +324,7 @@ func subshandler(sub event.Subscription, handlerFunc unsafe.Pointer, tid string,
 				fmt.Println("sending event")
 				_ = e
 				C.bridgeCallbackAsync(C.asyncCallback(handlerFunc), C.emptyDBuffer(), tidBuffer)
+				fmt.Println("sent event")
 			}
 		default:
 			{
@@ -322,13 +332,14 @@ func subshandler(sub event.Subscription, handlerFunc unsafe.Pointer, tid string,
 		}
 
 	}
+	runtime.KeepAlive(handlerFunc)
 	runtime.KeepAlive(evbus)
 	runtime.KeepAlive(sub)
 	fmt.Println("subscribe to rechability end")
 }
 
 func SubscribeToAddressUpdatedEvent(host host.Host, handlerFunc unsafe.Pointer, tid string) event.Subscription {
-	fmt.Println("handling for Event EvtLocalAddressesUpdated")
+	fmt.Println("handling for Event EvtLocalAddressesUpdatedasdasdasfas")
 	eventbus := host.EventBus()
 	sub, _ := eventbus.Subscribe([]interface{}{new(event.EvtLocalAddressesUpdated)})
 	go subshandler(sub, handlerFunc, tid, eventbus)

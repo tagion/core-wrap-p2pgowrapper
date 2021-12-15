@@ -9,7 +9,7 @@ import (
 
 	autonat "github.com/libp2p/go-libp2p-autonat"
 	"github.com/libp2p/go-libp2p-core/network"
-	host "github.com/libp2p/go-libp2p-host"
+	host "github.com/libp2p/go-libp2p-core/host"
 )
 
 func CreateAutoNAT(ctx context.Context, node host.Host, options ...autonat.Option) autonat.AutoNAT {
